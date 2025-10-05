@@ -1,0 +1,171 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-repo-assistant
+  labels:
+    app: smart-repo-assistant
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: smart-repo-assistant
+  template:
+    metadata:
+      labels:
+        app: smart-repo-assistant
+    spec:
+      containers:
+      - name: smart-repo-assistant
+        image: smartrepoassistant.azurecr.io/smart-repo-assistant:latest
+        ports:
+        - containerPort: 5000
+        - containerPort: 8501
+        env:
+        - name: GITHUB_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: github-secrets
+              key: app-id
+        - name: GITHUB_APP_INSTALLATION_ID
+          valueFrom:
+            secretKeyRef:
+              name: github-secrets
+              key: installation-id
+        - name: GITHUB_WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: github-secrets
+              key: webhook-secret
+        - name: GITHUB_PRIVATE_KEY_PATH
+          value: "/secrets/github-private-key.pem"
+        - name: DEFAULT_REPO
+          value: "devesh950/Smart-Repository-Assistant"
+        - name: FLASK_HOST
+          value: "0.0.0.0"
+        - name: FLASK_PORT
+          value: "5000"
+        - name: ENVIRONMENT
+          value: "production"
+        volumeMounts:
+        - name: github-private-key
+          mountPath: /secrets
+          readOnly: true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: github-private-key
+        secret:
+          secretName: github-private-key
+          defaultMode: 0600
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-repo-assistant-service
+  labels:
+    app: smart-repo-assistant
+spec:
+  selector:
+    app: smart-repo-assistant
+  ports:
+  - name: webhook
+    port: 80
+    targetPort: 5000
+    protocol: TCP
+  - name: dashboard
+    port: 8501
+    targetPort: 8501
+    protocol: TCP
+  type: LoadBalancer
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: smart-repo-assistant-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - smart-repo-assistant.yourdomain.com
+    secretName: smart-repo-assistant-tls
+  rules:
+  - host: smart-repo-assistant.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: smart-repo-assistant-service
+            port:
+              number: 80
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-secrets
+type: Opaque
+stringData:
+  app-id: "your_github_app_id_here"
+  installation-id: "your_installation_id_here"
+  webhook-secret: "your_webhook_secret_here"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-private-key
+type: Opaque
+data:
+  github-private-key.pem: |
+    # Base64 encoded private key content goes here
+    # Use: cat private-key.pem | base64 -w 0
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: smart-repo-assistant-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: smart-repo-assistant
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
