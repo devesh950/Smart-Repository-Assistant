@@ -1,0 +1,31 @@
+{
+  "name": "smart-repository-assistant",
+  "version": "1.0.0",
+  "description": "Intelligent GitHub repository management and analytics system",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py",
+    "dashboard": "streamlit run dashboard.py",
+    "test": "python test_system.py",
+    "dev": "python app.py"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devesh950/smart-repository-assistant.git"
+  },
+  "keywords": [
+    "github",
+    "analytics",
+    "repository",
+    "automation",
+    "machine-learning",
+    "dashboard",
+    "webhook",
+    "issue-tracking"
+  ],
+  "author": "Devesh",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.x"
+  }
+}

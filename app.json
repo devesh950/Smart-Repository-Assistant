@@ -1,0 +1,53 @@
+{
+  "name": "Smart Repository Assistant",
+  "description": "Intelligent GitHub repository management and analytics system with interactive dashboard",
+  "repository": "https://github.com/devesh950/smart-repository-assistant",
+  "logo": "https://via.placeholder.com/120/4CAF50/FFFFFF?text=SRA",
+  "keywords": [
+    "github",
+    "analytics", 
+    "dashboard",
+    "python",
+    "flask",
+    "streamlit",
+    "automation"
+  ],
+  "env": {
+    "GITHUB_TOKEN": {
+      "description": "Your GitHub Personal Access Token",
+      "required": true
+    },
+    "GITHUB_WEBHOOK_SECRET": {
+      "description": "Secret for GitHub webhook verification (optional)",
+      "required": false,
+      "value": "your-secret-key"
+    },
+    "DEFAULT_REPO": {
+      "description": "Default repository to analyze (owner/repo-name)",
+      "required": true,
+      "value": "facebook/react"
+    },
+    "FLASK_HOST": {
+      "description": "Flask server host",
+      "value": "0.0.0.0"
+    },
+    "FLASK_PORT": {
+      "description": "Flask server port",
+      "value": "5000"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "standard-1x"
+    }
+  },
+  "image": "heroku/python",
+  "stack": "heroku-20",
+  "addons": [
+    {
+      "plan": "heroku-postgresql:hobby-dev",
+      "as": "DATABASE"
+    }
+  ]
+}
