@@ -158,4 +158,4 @@ analytics_report_*.json
 
 # Temporary files
 temp/
-tmp/
+tmp/.env.example
